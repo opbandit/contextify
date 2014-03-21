@@ -410,7 +410,7 @@ static v8::Isolate* nan_isolate = v8::Isolate::GetCurrent();
   }
 
   static NAN_INLINE(v8::Local<v8::Object> NanNewBufferHandle (
-      const char *data
+      char *data
     , uint32_t size
   )) {
     return node::Buffer::New(data, size);
@@ -528,10 +528,7 @@ static v8::Isolate* nan_isolate = v8::Isolate::GetCurrent();
 # define NanInitPersistent(type, name, obj)                                    \
     v8::Persistent<type> name = v8::Persistent<type>::New(obj)
 # define NanAssignPersistent(type, handle, obj)                                \
-    do {                                                                       \
-      handle.Dispose();                                                        \
-      handle = v8::Persistent<type>::New(obj);                                 \
-    } while (0)
+    handle = v8::Persistent<type>::New(obj)
 # define NanObjectWrapHandle(obj) obj->handle_
 # define NanMakeWeak(handle, parameters, callback)                             \
     handle.MakeWeak(parameters, callback)
@@ -629,7 +626,7 @@ static v8::Isolate* nan_isolate = v8::Isolate::GetCurrent();
   }
 
   static NAN_INLINE(v8::Local<v8::Object> NanNewBufferHandle (
-      const char *data
+      char *data
     , uint32_t size
   )) {
     return NanNewLocal<v8::Object>(node::Buffer::New(data, size)->handle_);
@@ -934,7 +931,7 @@ template <typename TypeName> static size_t _nan_base64_decode(
   const TypeName* srcEnd = src + srcLen;
 
   while (src < srcEnd && dst < dstEnd) {
-    ptrdiff_t remaining = srcEnd - src;
+    int remaining = srcEnd - src;
     char a, b, c, d;
 
     while (_nan_unbase64(*src) < 0 && src < srcEnd) src++, remaining--;
@@ -1066,7 +1063,7 @@ static NAN_INLINE(void* NanRawString(
       }
       NanSetPointerSafe<size_t>(
           datalen
-        , toStr->WriteAscii(to, 0, int(sz_ + term_len), flags));
+        , toStr->WriteAscii(to, 0, sz_ + term_len, flags));
       return to;
 #endif
     case Nan::BINARY:
@@ -1083,7 +1080,7 @@ static NAN_INLINE(void* NanRawString(
       {
         uint16_t* twobytebuf = new uint16_t[sz_ + term_len];
 
-        size_t len = toStr->Write(twobytebuf, 0, int(sz_ + term_len), flags);
+        size_t len = toStr->Write(twobytebuf, 0, sz_ + term_len, flags);
 
         for (size_t i = 0; i < sz_ + term_len && i < len + term_len; i++) {
           unsigned char *b = reinterpret_cast<unsigned char*>(&twobytebuf[i]);
@@ -1101,7 +1098,7 @@ static NAN_INLINE(void* NanRawString(
         toStr->WriteOneByte(
             reinterpret_cast<uint8_t *>(to)
           , 0
-          , int(sz_ + term_len)
+          , sz_ + term_len
           , flags));
       return to;
 #endif
@@ -1114,7 +1111,7 @@ static NAN_INLINE(void* NanRawString(
       }
       NanSetPointerSafe<size_t>(
           datalen
-        , toStr->WriteUtf8(to, int(sz_ + term_len), NULL, flags) - term_len);
+        , toStr->WriteUtf8(to, sz_ + term_len, NULL, flags) - term_len);
       return to;
     case Nan::BASE64:
       {
@@ -1145,7 +1142,7 @@ static NAN_INLINE(void* NanRawString(
         int bc = 2 * toStr->Write(
             reinterpret_cast<uint16_t *>(to)
           , 0
-          , int(sz_ + term_len)
+          , sz_ + term_len
           , flags);
         NanSetPointerSafe<size_t>(datalen, bc);
         return to;
